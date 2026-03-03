@@ -1,0 +1,11 @@
+id: CON-SYS-004
+description: Agent sessions must not exceed 30 minutes
+type: detective
+trigger: schedule
+scope: global
+checks:
+  - name: session_duration
+    command:
+      run: "result=$(ps -eo user,etimes,args --no-headers | grep '^a-' | grep '[c]on run' | awk '{if ($2 > 1800) print $1}' | head -1); [ -z \"$result\" ]"
+      exit_code: 0
+    on_fail: alert

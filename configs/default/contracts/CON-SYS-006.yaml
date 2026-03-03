@@ -1,0 +1,11 @@
+id: CON-SYS-006
+description: /etc/conos/env must be mode 600 root:root (only systemd reads it)
+type: detective
+trigger: schedule
+scope: global
+checks:
+  - name: env_file_root_only
+    command:
+      run: "stat -c '%U %G %a' /etc/conos/env | awk '{exit ($1==\"root\" && $2==\"root\" && $3==\"600\") ? 0 : 1}'"
+      exit_code: 0
+    on_fail: alert

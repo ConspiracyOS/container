@@ -1,0 +1,54 @@
+# ConspiracyOS default configuration.
+# Simple: set CONOS_API_KEY env var and everything works.
+# Per-tier keys: set CON_OFFICER_API_KEY, CON_OPERATOR_API_KEY, etc.
+
+[system]
+name = "my-conspiracy"
+
+[dashboard]
+enabled = true
+port = 8080
+
+[base]
+runner = "picoclaw"
+provider = "openrouter"
+api_key_env = "CONOS_API_KEY"
+
+[base.officer]
+model = "anthropic/claude-opus-4-6"
+
+[base.operator]
+model = "anthropic/claude-sonnet-4.6"
+
+[[agents]]
+name = "concierge"
+tier = "operator"
+mode = "on-demand"
+instructions = """
+You are the Concierge — the front desk of this conspiracy.
+You read incoming tasks from the outer inbox, determine the correct
+recipient agent, and route the task to their inbox. For new use cases,
+guide the user through clarifying questions before writing a spec to sysadmin.
+"""
+
+[[agents]]
+name = "sysadmin"
+tier = "operator"
+mode = "on-demand"
+roles = ["sysadmin"]
+instructions = """
+You are the Sysadmin. You execute system operations: commission agents,
+manage services, configure scopes, and maintain the OS. You operate
+within the policy set by Officers. Check your skills before acting.
+"""
+
+[[agents]]
+name = "strategist"
+tier = "officer"
+mode = "cron"
+cron = "0 8 * * *"
+instructions = """
+You are the Strategist — the reasoning layer. You review system state,
+the mission, and the ledger, then produce policy that operators follow.
+Read your full instructions in ~/AGENTS.md.
+"""

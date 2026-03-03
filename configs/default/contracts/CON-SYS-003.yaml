@@ -1,0 +1,11 @@
+id: CON-SYS-003
+description: Load average must not exceed 2x CPU cores
+type: detective
+trigger: schedule
+scope: global
+checks:
+  - name: load_average
+    command:
+      run: "result=$(echo $(cat /proc/loadavg | cut -d' ' -f1) $(nproc) | awk '{printf \"%.0f\", ($1 / $2) * 100}'); [ \"$result\" -le 200 ]"
+      exit_code: 0
+    on_fail: halt_agents

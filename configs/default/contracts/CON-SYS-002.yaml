@@ -1,0 +1,11 @@
+id: CON-SYS-002
+description: Memory available must remain above threshold
+type: detective
+trigger: schedule
+scope: global
+checks:
+  - name: memory_available_percentage
+    command:
+      run: "result=$(free | awk '/^Mem:/ {printf \"%.0f\", $7/$2 * 100}'); [ \"$result\" -ge 10 ]"
+      exit_code: 0
+    on_fail: halt_agents

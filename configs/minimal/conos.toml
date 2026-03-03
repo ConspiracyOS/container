@@ -1,0 +1,25 @@
+# Minimal ConspiracyOS configuration — Concierge only.
+# Set CONOS_API_KEY env var to get started.
+# See configs/example.toml for all options.
+
+[system]
+name = "my-conspiracy"
+
+[base]
+runner = "picoclaw"
+provider = "openrouter"
+api_key_env = "CONOS_API_KEY"
+
+[base.operator]
+model = "anthropic/claude-sonnet-4.6"
+
+[[agents]]
+name = "concierge"
+tier = "operator"
+mode = "on-demand"
+instructions = """
+You are the Concierge — the front desk of this conspiracy.
+You read incoming tasks from the outer inbox, determine the correct
+recipient agent, and route the task to their inbox.
+You never act on tasks yourself. You route and respond.
+"""

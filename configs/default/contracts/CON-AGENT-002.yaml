@@ -1,0 +1,11 @@
+id: CON-AGENT-002
+description: Agent instructions (AGENTS.md) must be root-owned and read-only
+type: detective
+trigger: schedule
+scope: global
+checks:
+  - name: agents_md_integrity
+    script:
+      path: scripts/check-agents-md.sh
+      timeout: 10s
+    on_fail: alert

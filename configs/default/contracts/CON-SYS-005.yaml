@@ -1,0 +1,11 @@
+id: CON-SYS-005
+description: Audit log directory must be writable
+type: detective
+trigger: schedule
+scope: global
+checks:
+  - name: audit_log_writable
+    command:
+      run: "touch /srv/conos/logs/audit/.healthcheck-probe && rm /srv/conos/logs/audit/.healthcheck-probe"
+      exit_code: 0
+    on_fail: halt_agents
