@@ -1,0 +1,27 @@
+id: CON-SEC-002
+description: Agent git repositories must not have unauthorized remote destinations
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: git_remotes_audit
+    skip_if:
+      command_not_available: git
+    script:
+      inline: |
+        fail=0
+        for gitdir in $(find /srv/conos/agents -maxdepth 4 -name '.git' -type d 2>/dev/null); do
+          repo=$(dirname "$gitdir")
+          for url in $(git -C "$repo" remote -v 2>/dev/null | awk '/\(fetch\)/{print $2}'); do
+            case "$url" in
+              *github.com/ConspiracyOS/*|http://localhost*|git://localhost*|file://*)
+                ;;
+              *)
+                echo "Unauthorized git remote in $repo: $url"
+                fail=1
+                ;;
+            esac
+          done
+        done
+        exit $fail
+    on_fail: alert

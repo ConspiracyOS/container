@@ -9,6 +9,9 @@ name = "my-conspiracy"
 enabled = true
 port = 8080
 
+[contracts]
+brief_output = "/srv/conos/context/system-state.md"
+
 [base]
 runner = "picoclaw"
 provider = "openrouter"
