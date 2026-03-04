@@ -12,7 +12,7 @@ AGENT="concierge"
 
 echo ""
 echo "--- 6a. Stop path watcher to batch-load tasks ---"
-systemctl stop con-concierge.path 2>/dev/null || true
+systemctl stop conos-concierge.path 2>/dev/null || true
 
 echo ""
 echo "--- 6b. Drop two tasks into inbox ---"
@@ -27,7 +27,7 @@ check "task B in inbox" test -f "/srv/conos/agents/$AGENT/inbox/${TASK_B}.task"
 
 echo ""
 echo "--- 6c. Re-enable path watcher and trigger ---"
-systemctl start con-concierge.path
+systemctl start conos-concierge.path
 
 # Touch inbox to trigger the watcher
 touch "/srv/conos/agents/$AGENT/inbox/"

@@ -1,7 +1,7 @@
 #!/bin/bash
 # test/e2e/05-agent-resilience.sh
 # Verify CON-SYS-004 detects long-running agent sessions.
-# Simulates a hung agent by creating a fake long-running "con run" process.
+# Simulates a hung agent by creating a fake long-running "conctl run" process.
 set -euo pipefail
 source "$(dirname "$0")/helpers.sh"
 
@@ -11,18 +11,18 @@ require_researcher
 
 echo ""
 echo "--- 5a. Create a fake long-running 'con run' process as researcher ---"
-# Create a wrapper script that appears as "con run researcher" in ps args
-cat > /tmp/fake-con-run.sh << 'SCRIPT'
+# Create a wrapper script that appears as "conctl run researcher" in ps args
+cat > /tmp/fake-conctl-run.sh << 'SCRIPT'
 #!/bin/sh
 sleep 3600
 SCRIPT
-chmod +x /tmp/fake-con-run.sh
-su -s /bin/sh a-researcher -c "nohup /tmp/fake-con-run.sh con run researcher >/dev/null 2>&1 &"
+chmod +x /tmp/fake-conctl-run.sh
+su -s /bin/sh a-researcher -c "nohup /tmp/fake-conctl-run.sh conctl run researcher >/dev/null 2>&1 &"
 sleep 3  # Wait for process to accumulate >1 second of runtime
 
 # Verify the process exists
-check "fake 'con run' process running as a-researcher" \
-    pgrep -u a-researcher -f "con run"
+check "fake 'conctl run' process running as a-researcher" \
+    pgrep -u a-researcher -f "conctl run"
 
 echo ""
 echo "--- 5b. Override CON-SYS-004 to use 1-second threshold ---"
@@ -69,10 +69,10 @@ check "CON-SYS-004 failure logged" grep -q "CON-SYS-004 FAIL" "$LOGFILE"
 echo ""
 echo "--- 5e. Clean up ---"
 # Kill the fake process
-pkill -u a-researcher -f "con run" 2>/dev/null || true
+pkill -u a-researcher -f "conctl run" 2>/dev/null || true
 sleep 1
-check_fail "fake 'con run' process killed" pgrep -u a-researcher -f "con run"
-rm -f /tmp/fake-con-run.sh
+check_fail "fake 'conctl run' process killed" pgrep -u a-researcher -f "conctl run"
+rm -f /tmp/fake-conctl-run.sh
 
 # Restore contract
 if [ -n "$ORIGINAL_004" ]; then

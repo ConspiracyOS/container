@@ -26,7 +26,7 @@ check_fail "researcher cannot write to concierge inbox" \
 echo ""
 echo "--- 2d. Researcher cannot use sudo ---"
 check_fail "researcher cannot use sudo" \
-    su -s /bin/sh a-researcher -c "sudo systemctl stop con-concierge.path"
+    su -s /bin/sh a-researcher -c "sudo systemctl stop conos-concierge.path"
 
 echo ""
 echo "--- 2e. Researcher cannot read other agent workspaces ---"

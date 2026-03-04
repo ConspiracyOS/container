@@ -12,7 +12,7 @@ require_researcher
 
 echo ""
 echo "--- 1a. Verify researcher path watcher is active ---"
-check "researcher path watcher active" systemctl is-active con-researcher.path
+check "researcher path watcher active" systemctl is-active conos-researcher.path
 
 echo ""
 echo "--- 1b. Drop delegation task into outer inbox ---"

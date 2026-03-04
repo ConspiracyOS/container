@@ -39,8 +39,8 @@ check "home permissions unchanged" [ "$PERMS_CONCIERGE_HOME" = "$PERMS_CONCIERGE
 
 echo ""
 echo "--- 29d. Verify services still running after double bootstrap ---"
-check "concierge watcher still active" systemctl is-active con-concierge.path
-check "sysadmin watcher still active" systemctl is-active con-sysadmin.path
+check "concierge watcher still active" systemctl is-active conos-concierge.path
+check "sysadmin watcher still active" systemctl is-active conos-sysadmin.path
 check "healthcheck timer still active" systemctl is-active conos-healthcheck.timer
 
 echo ""

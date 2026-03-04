@@ -47,8 +47,8 @@ check "concierge can write to sysadmin inbox" \
 
 echo ""
 echo "--- 4. Systemd units ---"
-check "concierge path unit enabled" systemctl is-enabled con-concierge.path
-check "sysadmin path unit enabled" systemctl is-enabled con-sysadmin.path
+check "concierge path unit enabled" systemctl is-enabled conos-concierge.path
+check "sysadmin path unit enabled" systemctl is-enabled conos-sysadmin.path
 
 echo ""
 echo "--- 5. AGENTS.md assembled ---"
