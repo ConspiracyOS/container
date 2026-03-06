@@ -1,31 +1,31 @@
 # Default profile: full system administration
 # Safety comes from audit trails, contracts, and heartbeat — not restriction
-Cmnd_Alias CON_AGENT_OPS = \
-    /usr/bin/systemctl start con-*, \
-    /usr/bin/systemctl restart con-*, \
-    /usr/bin/systemctl stop con-*, \
-    /usr/bin/systemctl enable con-*, \
-    /usr/bin/systemctl enable --now con-*, \
-    /usr/bin/systemctl disable con-*, \
+Cmnd_Alias CONOS_AGENT_OPS = \
+    /usr/bin/systemctl start conos-*, \
+    /usr/bin/systemctl restart conos-*, \
+    /usr/bin/systemctl stop conos-*, \
+    /usr/bin/systemctl enable conos-*, \
+    /usr/bin/systemctl enable --now conos-*, \
+    /usr/bin/systemctl disable conos-*, \
     /usr/bin/systemctl daemon-reload, \
-    /usr/bin/tee /etc/systemd/system/con-*.service, \
-    /usr/bin/tee /etc/systemd/system/con-*.path, \
-    /usr/bin/tee /etc/systemd/system/con-*.timer
+    /usr/bin/tee /etc/systemd/system/conos-*.service, \
+    /usr/bin/tee /etc/systemd/system/conos-*.path, \
+    /usr/bin/tee /etc/systemd/system/conos-*.timer
 
-Cmnd_Alias CON_PKG_OPS = \
+Cmnd_Alias CONOS_PKG_OPS = \
     /usr/bin/apt-get update, \
     /usr/bin/apt-get install *, \
     /usr/bin/apt-get remove *, \
     /usr/bin/apt-get upgrade, \
     /usr/bin/apt-get autoremove
 
-Cmnd_Alias CON_USER_OPS = \
+Cmnd_Alias CONOS_USER_OPS = \
     /usr/sbin/useradd, \
     /usr/sbin/usermod, \
     /usr/sbin/groupadd, \
     /usr/sbin/groupmod
 
-Cmnd_Alias CON_FILE_OPS = \
+Cmnd_Alias CONOS_FILE_OPS = \
     /usr/bin/install, \
     /usr/bin/setfacl, \
     /usr/bin/chown, \
@@ -33,7 +33,7 @@ Cmnd_Alias CON_FILE_OPS = \
     /usr/bin/mkdir, \
     /usr/bin/tee
 
-Cmnd_Alias CON_SVC_OPS = \
+Cmnd_Alias CONOS_SVC_OPS = \
     /usr/bin/systemctl start *, \
     /usr/bin/systemctl stop *, \
     /usr/bin/systemctl restart *, \
@@ -41,12 +41,12 @@ Cmnd_Alias CON_SVC_OPS = \
     /usr/bin/systemctl disable *, \
     /usr/bin/systemctl status *
 
-Cmnd_Alias CON_NET_OPS = \
+Cmnd_Alias CONOS_NET_OPS = \
     /usr/sbin/ip, \
     /usr/sbin/nft
 
-Cmnd_Alias CON_BOOTSTRAP_OPS = \
-    /usr/local/bin/con bootstrap
+Cmnd_Alias CONOS_BOOTSTRAP_OPS = \
+    /usr/local/bin/conctl bootstrap
 
-a-sysadmin ALL=(root) NOPASSWD: CON_AGENT_OPS, CON_PKG_OPS, CON_USER_OPS, \
-    CON_FILE_OPS, CON_SVC_OPS, CON_NET_OPS, CON_BOOTSTRAP_OPS
+a-sysadmin ALL=(root) NOPASSWD: CONOS_AGENT_OPS, CONOS_PKG_OPS, CONOS_USER_OPS, \
+    CONOS_FILE_OPS, CONOS_SVC_OPS, CONOS_NET_OPS, CONOS_BOOTSTRAP_OPS

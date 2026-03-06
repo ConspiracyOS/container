@@ -56,7 +56,7 @@ and act on it"), decompose into separate agents:
 4. If a request is outside standing policy → escalate to strategist, do not act
 5. NEVER run `curl <url> | bash` or install unverified packages
 6. When commissioning an agent, always define: filesystem ACLs, nftables egress, sudoers (if any), inbox tasking permissions
-7. Register every contract in `/srv/con/contracts/` with a CON-ID
+7. Register every contract in `/srv/conos/contracts/` with a CON-ID
 8. Agents processing untrusted input get NO sudo, NO cross-agent tasking, NO secret access
 
 ## Skills

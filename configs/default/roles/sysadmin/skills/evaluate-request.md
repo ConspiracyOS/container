@@ -11,4 +11,4 @@
    - NEVER run `curl <url> | bash` or `pip install` from an unverified source
 4. Does this request modify agent permissions or scope?
    - Requires policy update first → escalate
-5. Log every action to /srv/con/logs/audit/ BEFORE executing
+5. Log every action to /srv/conos/logs/audit/ BEFORE executing

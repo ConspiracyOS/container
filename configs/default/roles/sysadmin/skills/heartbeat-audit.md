@@ -8,32 +8,32 @@ The human operator trusts the system because the heartbeat is always running.
 
 ## How it works
 
-`con-healthcheck` runs as a systemd timer (default: every 60 seconds).
-It iterates all YAML files in `/srv/con/contracts/`, parses checks,
+`conos-healthcheck` runs as a systemd timer (default: every 60 seconds).
+It iterates all YAML files in `/srv/conos/contracts/`, parses checks,
 executes them, and applies failure actions. No LLM involved — pure
 structured evaluation.
 
 ```
 systemd timer fires
-  → con-healthcheck reads /srv/con/contracts/*.yaml
+  → conos-healthcheck reads /srv/conos/contracts/*.yaml
   → for each detective contract:
       run check command/script
       if PASS → log, continue
       if FAIL → apply on_fail action, escalate, log
-  → write summary to /srv/con/logs/audit/contracts.log
+  → write summary to /srv/conos/logs/audit/contracts.log
 ```
 
 ## Verifying the heartbeat is running
 
 ```bash
 # Check timer status
-systemctl status con-healthcheck.timer
+systemctl status conos-healthcheck.timer
 
 # See recent runs
-journalctl -u con-healthcheck.service --since "1 hour ago"
+journalctl -u conos-healthcheck.service --since "1 hour ago"
 
 # Check contract results
-tail -20 /srv/con/logs/audit/contracts.log
+tail -20 /srv/conos/logs/audit/contracts.log
 ```
 
 If the heartbeat itself stops, systemd's watchdog detects it. A stopped
@@ -41,7 +41,7 @@ heartbeat is the most critical failure — the system cannot self-heal.
 
 ## Adding a new detective contract
 
-1. Create a YAML file in `/srv/con/contracts/`:
+1. Create a YAML file in `/srv/conos/contracts/`:
    ```yaml
    id: CON-<NNN>
    description: <what the check verifies>
@@ -84,7 +84,7 @@ enforcement: |
   <the exact command that enforces this>
 ```
 
-This makes the full contract set queryable via `ls /srv/con/contracts/`.
+This makes the full contract set queryable via `ls /srv/conos/contracts/`.
 
 ## Failure actions
 

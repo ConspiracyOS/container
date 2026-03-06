@@ -88,7 +88,7 @@ deploy: image
 task:
 	@if [ -z "$(MSG)" ]; then echo "Usage: make task MSG=\"your message\""; exit 1; fi
 	@TASKID=$$(date +%s); \
-	$(RUNTIME) exec $(NAME) sh -c "printf '%s' '$(MSG)' > /srv/conos/inbox/$${TASKID}.task && chown a-concierge:agents /srv/conos/inbox/$${TASKID}.task" && \
+	printf '%s' "$(MSG)" | $(RUNTIME) exec -i $(NAME) sh -c "cat > /srv/conos/inbox/$${TASKID}.task && chown a-concierge:agents /srv/conos/inbox/$${TASKID}.task" && \
 	echo "Task $${TASKID}.task dropped into inbox"
 
 # Show agent status

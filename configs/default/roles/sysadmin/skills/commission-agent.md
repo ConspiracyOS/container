@@ -20,18 +20,18 @@ Tier does NOT grant authority — authority comes from roles and ACLs. A worker 
 the right ACLs can write to an inbox; an officer without them cannot. Tier controls
 cost and default filesystem isolation.
 
-When in doubt, choose `worker`. The agent can be upgraded later by editing con.toml
-and re-running `con bootstrap`.
+When in doubt, choose `worker`. The agent can be upgraded later by editing conos.toml
+and re-running `conctl bootstrap`.
 
 ## Steps
 
 0. Pre-flight: verify you have the capabilities needed to commission:
    ```
-   test -w /srv/con/contracts/ && echo "contracts: ok" || echo "contracts: FAIL"
+   test -w /srv/conos/contracts/ && echo "contracts: ok" || echo "contracts: FAIL"
    sudo -n useradd -D >/dev/null 2>&1 && echo "useradd: ok" || echo "useradd: FAIL"
-   sudo -n install -d /srv/con/agents/.preflight-test >/dev/null 2>&1 \
+   sudo -n install -d /srv/conos/agents/.preflight-test >/dev/null 2>&1 \
      && echo "install: ok" || echo "install: FAIL"
-   sudo rm -rf /srv/con/agents/.preflight-test 2>/dev/null
+   sudo rm -rf /srv/conos/agents/.preflight-test 2>/dev/null
    ```
    If any pre-flight check fails, STOP and escalate — do not attempt partial commissioning.
 
@@ -45,32 +45,32 @@ and re-running `con bootstrap`.
 
    NOTE: Do NOT create or chmod the home directory manually. Your service runs with
    ProtectHome=tmpfs — directories created under /home/ will vanish when your service
-   exits. The `con bootstrap` step below handles home directory creation in a persistent
+   exits. The `conctl bootstrap` step below handles home directory creation in a persistent
    context.
 
 3. Create directories (each with correct ownership):
    ```
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/inbox
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/outbox
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/workspace
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/workspace/sessions
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/workspace/skills
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/sessions
-   sudo install -d -o a-<name> -g agents -m 700 /srv/con/agents/<name>/processed
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/inbox
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/outbox
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/workspace
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/workspace/sessions
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/workspace/skills
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/sessions
+   sudo install -d -o a-<name> -g agents -m 700 /srv/conos/agents/<name>/processed
    ```
 
 4. Set ACLs — concierge must be able to task the new agent:
    ```
-   sudo setfacl -m u:a-concierge:x /srv/con/agents/<name>/
-   sudo setfacl -m u:a-concierge:rwx /srv/con/agents/<name>/inbox/
+   sudo setfacl -m u:a-concierge:x /srv/conos/agents/<name>/
+   sudo setfacl -m u:a-concierge:rwx /srv/conos/agents/<name>/inbox/
    ```
    The traverse ACL (`:x`) on the base dir lets concierge reach the inbox through the 700 parent.
    Add other tasking ACLs as specified in the commissioning request.
 
 5. Network isolation (if the agent needs restricted network access):
    ```
-   sudo tee /etc/nftables.d/con-<name>.nft << 'EOF'
+   sudo tee /etc/nftables.d/conos-<name>.nft << 'EOF'
    table inet filter_<name> {
        chain output_<name> {
            type filter hook output priority 0; policy accept;
@@ -86,7 +86,7 @@ and re-running `con bootstrap`.
        }
    }
    EOF
-   sudo nft -f /etc/nftables.d/con-<name>.nft
+   sudo nft -f /etc/nftables.d/conos-<name>.nft
    ```
 
    MINIMUM REQUIREMENTS — never omit these:
@@ -98,9 +98,9 @@ and re-running `con bootstrap`.
    But ALWAYS keep DNS rules — without them, no hostname resolves and all network
    operations fail silently.
 
-6. Update the outer config (`/etc/con/con.toml`) — append the agent entry:
+6. Update the outer config (`/etc/conos/conos.toml`) — append the agent entry:
    ```
-   cat >> /etc/con/con.toml << EOF
+   cat >> /etc/conos/conos.toml << EOF
 
    [[agents]]
    name = "<name>"
@@ -110,45 +110,45 @@ and re-running `con bootstrap`.
    instructions = "<one-line purpose>"
    EOF
    ```
-   This is required — `con run` resolves agents from this file. Without it, the
+   This is required — `conctl run` resolves agents from this file. Without it, the
    agent's path watcher will trigger but the run will fail with "agent not found".
 
 7. Write agent config to inner config:
    ```
-   Write to /srv/con/config/agents/<name>.toml with the agent's configuration
+   Write to /srv/conos/config/agents/<name>.toml with the agent's configuration
    (name, tier, mode, roles, instructions, etc.)
    ```
 
 8. Run bootstrap to generate hardened systemd units and assemble AGENTS.md:
    ```
-   con bootstrap
+   conctl bootstrap
    ```
-   Bootstrap reads `/etc/con/con.toml`, generates service+path units with
+   Bootstrap reads `/etc/conos/conos.toml`, generates service+path units with
    tier-appropriate hardening (ProtectHome, PrivateTmp, UMask, ReadWritePaths),
    and assembles AGENTS.md from layers. Do NOT write units manually — bootstrap
    is the single source of truth for systemd units.
 
    Verify:
    ```
-   cat /etc/systemd/system/con-<name>.service | grep ProtectHome  # should show tmpfs
+   cat /etc/systemd/system/conos-<name>.service | grep ProtectHome  # should show tmpfs
    ls -la /home/a-<name>/AGENTS.md                                # should exist
    ```
 
 9. Reload systemd and enable the path watcher:
    ```
    sudo systemctl daemon-reload
-   sudo systemctl enable --now con-<name>.path
+   sudo systemctl enable --now conos-<name>.path
    ```
 
-10. Log the commissioning to the audit log at `/srv/con/logs/audit/`
+10. Log the commissioning to the audit log at `/srv/conos/logs/audit/`
 
 11. Post-commission verification — confirm the agent is correctly set up:
     ```
     id a-<name>                                              # user exists
-    systemctl is-enabled con-<name>.path                     # watcher enabled
-    ls -la /srv/con/agents/<name>/inbox/                     # inbox exists with correct ownership
-    getfacl /srv/con/agents/<name>/inbox/ | grep concierge   # concierge ACL set
-    cat /etc/con/con.toml | grep <name>                      # agent in outer config
+    systemctl is-enabled conos-<name>.path                     # watcher enabled
+    ls -la /srv/conos/agents/<name>/inbox/                     # inbox exists with correct ownership
+    getfacl /srv/conos/agents/<name>/inbox/ | grep concierge   # concierge ACL set
+    cat /etc/conos/conos.toml | grep <name>                      # agent in outer config
     ls -la /home/a-<name>/AGENTS.md                          # AGENTS.md assembled
     ```
     If any verification fails, the agent is not fully commissioned — investigate before declaring success.

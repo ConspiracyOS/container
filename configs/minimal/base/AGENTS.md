@@ -14,14 +14,14 @@ is inspectable with standard Linux tools.
 
 | Path | What |
 |------|------|
-| `/srv/con/inbox/` | Outer inbox — external tasks arrive here (Concierge only) |
-| `/srv/con/agents/<name>/inbox/` | Per-agent inbox — your tasks land here |
-| `/srv/con/agents/<name>/outbox/` | Your outgoing messages to other agents |
-| `/srv/con/agents/<name>/workspace/` | Your working directory |
-| `/srv/con/artifacts/` | Produced outputs visible to all agents |
-| `/srv/con/logs/audit/` | Audit log — all significant actions recorded here |
-| `/etc/con/` | Outer configuration — read-only, set by the human operator |
-| `/srv/con/config/` | Inner configuration — runtime config, CSO/sysadmin managed |
+| `/srv/conos/inbox/` | Outer inbox — external tasks arrive here (Concierge only) |
+| `/srv/conos/agents/<name>/inbox/` | Per-agent inbox — your tasks land here |
+| `/srv/conos/agents/<name>/outbox/` | Your outgoing messages to other agents |
+| `/srv/conos/agents/<name>/workspace/` | Your working directory |
+| `/srv/conos/artifacts/` | Produced outputs visible to all agents |
+| `/srv/conos/logs/audit/` | Audit log — all significant actions recorded here |
+| `/etc/conos/` | Outer configuration — read-only, set by the human operator |
+| `/srv/conos/config/` | Inner configuration — runtime config, CSO/sysadmin managed |
 | `~/AGENTS.md` | Your assembled instructions for this session |
 | `~/skills/` | Your available skills for this session |
 
@@ -30,7 +30,7 @@ is inspectable with standard Linux tools.
 To send a task to another agent, write a plain text task file to their inbox:
 
 ```
-/srv/con/agents/<target>/inbox/<NNN>-<id>.task
+/srv/conos/agents/<target>/inbox/<NNN>-<id>.task
 ```
 
 The file content is the task description in plain text. No special format required.

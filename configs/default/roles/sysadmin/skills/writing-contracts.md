@@ -84,7 +84,7 @@ No single agent compromise leaks data AND exfiltrates it.
    nft add rule inet filter output meta skuid a-<agent> \
      ip daddr != { <allowed-hosts> } drop
    ```
-4. Register in `/srv/con/contracts/`:
+4. Register in `/srv/conos/contracts/`:
    ```yaml
    id: CON-<NNN>
    description: <agent> may only reach <host>
@@ -101,7 +101,7 @@ No single agent compromise leaks data AND exfiltrates it.
 1. Define what "correct" looks like (the invariant)
 2. Write a check that returns exit 0 (pass) or exit 1 (fail)
 3. Define the failure action and escalation target
-4. Create the YAML in `/srv/con/contracts/`:
+4. Create the YAML in `/srv/conos/contracts/`:
    ```yaml
    id: CON-<NNN>
    description: <what the check verifies>

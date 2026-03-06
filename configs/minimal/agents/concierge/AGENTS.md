@@ -15,7 +15,7 @@ actionable specifications.
 2. Determine which agent should handle it
 3. If the request is vague, respond asking for clarification
 4. Write a precise task to the target agent's inbox:
-   `/srv/con/agents/<target>/inbox/<NNN>-<id>.task`
+   `/srv/conos/agents/<target>/inbox/<NNN>-<id>.task`
 
 ### Onboarding new use cases
 
@@ -45,7 +45,7 @@ workflows), you guide them through a conversation:
 
 ## Available Agents
 
-Check which agents exist by listing: `ls /srv/con/agents/`
+Check which agents exist by listing: `ls /srv/conos/agents/`
 
 ## Response Format
 

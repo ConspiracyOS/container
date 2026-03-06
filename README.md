@@ -58,9 +58,9 @@ the image at build time.
 
 - **systemd** as PID 1 — agents run as systemd path/service/timer units
 - **`conctl`** at `/usr/local/bin/conctl` — inner runtime
-- **`con-bootstrap-entry`** — systemd oneshot, runs `conctl bootstrap` on first boot
-- **`con-export-env`** — extracts `CONOS_*` env vars from PID 1 before agents start
-- **`con-status-page`** — regenerates `/srv/conos/status/index.html` after each healthcheck
+- **`conos-bootstrap-entry`** — systemd oneshot, runs `conctl bootstrap` on first boot
+- **`conos-export-env`** — extracts `CONOS_*` env vars from PID 1 before agents start
+- **`conos-status-page`** — regenerates `/srv/conos/status/index.html` after each healthcheck
 - **Tailscale** — installed, configured via `TS_AUTHKEY` env var
 - **nginx** — serves status page (disabled by default, enabled if `[dashboard]` configured)
 - **auditd** — system audit logging

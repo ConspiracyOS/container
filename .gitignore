@@ -1,4 +1,4 @@
-con
-con-linux-*
+conctl
+conctl-linux-*
 .env
 srv/

@@ -18,5 +18,5 @@ to follow.
 Example:
 
   Maintain a personal website. Publish weekly blog posts from drafts
-  in /srv/con/scopes/blog/drafts/. Monitor uptime. Keep costs under
+  in /srv/conos/scopes/blog/drafts/. Monitor uptime. Keep costs under
   $50/month.
