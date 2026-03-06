@@ -1,0 +1,49 @@
+id: CON-SYS-008
+description: Capture Linux state snapshot and append diff when system state changes
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: linux_state_snapshot_diff
+    command:
+      run: |
+        set -eu
+        SNAP_DIR="/srv/conos/logs/audit"
+        SNAP_FILE="$SNAP_DIR/linux-state.latest.txt"
+        DIFF_FILE="$SNAP_DIR/linux-state.diff.log"
+        TMP_FILE="$(mktemp)"
+
+        {
+          echo "ts=$(date -Iseconds)"
+          stat -c 'env_file=%U:%G:%a' /etc/conos/env 2>/dev/null || echo "env_file=missing"
+          stat -c 'contracts_dir=%U:%G:%a' /srv/conos/contracts 2>/dev/null || echo "contracts_dir=missing"
+          stat -c 'audit_dir=%U:%G:%a' /srv/conos/logs/audit 2>/dev/null || echo "audit_dir=missing"
+          stat -c 'artifacts_dir=%U:%G:%a' /srv/conos/artifacts 2>/dev/null || echo "artifacts_dir=missing"
+          stat -c 'policy_dir=%U:%G:%a' /srv/conos/policy 2>/dev/null || echo "policy_dir=missing"
+          systemctl is-active auditd 2>/dev/null | sed 's/^/auditd_active=/'
+          systemctl is-enabled auditd 2>/dev/null | sed 's/^/auditd_enabled=/'
+          systemctl is-enabled conos-healthcheck.timer 2>/dev/null | sed 's/^/healthcheck_timer_enabled=/'
+          sha256sum /etc/sudoers.d/conos-* 2>/dev/null | sort || true
+          sha256sum /etc/systemd/system/conos-*.service /etc/systemd/system/conos-*.path /etc/systemd/system/conos-*.timer 2>/dev/null | sort || true
+          findmnt -rn -o TARGET,OPTIONS / /srv/conos 2>/dev/null | sort || true
+          nft list ruleset 2>/dev/null | sha256sum | sed 's/^/nft_ruleset_sha256=/' || echo "nft_ruleset_sha256=unavailable"
+          getfacl -cp /srv/conos/logs/audit /srv/conos/ledger /srv/conos/artifacts 2>/dev/null | sed '/^#/d' || true
+        } > "$TMP_FILE"
+
+        if [ ! -f "$SNAP_FILE" ]; then
+          cp "$TMP_FILE" "$SNAP_FILE"
+          printf "%s init baseline\n" "$(date -Iseconds)" >> "$DIFF_FILE"
+        elif ! cmp -s "$TMP_FILE" "$SNAP_FILE"; then
+          printf "%s state changed\n" "$(date -Iseconds)" >> "$DIFF_FILE"
+          diff -u "$SNAP_FILE" "$TMP_FILE" >> "$DIFF_FILE" || true
+          cp "$TMP_FILE" "$SNAP_FILE"
+        fi
+
+        rm -f "$TMP_FILE"
+      exit_code: 0
+    on_fail: alert
+    severity: medium
+    category: integrity
+    what: unable to persist Linux baseline state snapshot and diff
+    verify: "tail -n 120 /srv/conos/logs/audit/linux-state.diff.log"
+    affects: ["/srv/conos/logs/audit/linux-state.latest.txt", "/srv/conos/logs/audit/linux-state.diff.log"]

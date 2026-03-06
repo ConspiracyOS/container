@@ -1,7 +1,7 @@
 id: CON-SYS-006
 description: /etc/conos/env must be mode 600 root:root (only systemd reads it)
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: env_file_root_only

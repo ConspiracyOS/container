@@ -1,7 +1,7 @@
 id: CON-SYS-004
 description: Agent sessions must not exceed 30 minutes
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: session_duration

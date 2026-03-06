@@ -4,6 +4,14 @@ The official ConspiracyOS container image. Runs Ubuntu 24.04 (or Debian 12)
 with systemd as PID 1. All agent isolation is enforced by Linux — POSIX ACLs,
 per-uid nftables rules, sudoers allowlists, systemd hardening.
 
+For first-time users, prefer the published image instead of building from source.
+
+## Quick start (published image)
+
+```bash
+docker run -d --name conos --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw --restart unless-stopped -e CONOS_OPENROUTER_API_KEY=sk-or-your-key ghcr.io/conspiracyos/conos:latest
+```
+
 ## Build
 
 ```bash
@@ -17,6 +25,13 @@ Supply a local binary during development:
 make image CONCTL_BIN=/path/to/conctl
 ```
 
+`CONCTL_BIN` must be a Linux ELF matching `ARCH` (`arm64` or `amd64`).
+Cross-compile from `conctl/` with:
+
+```bash
+GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o conctl ./cmd/conctl/
+```
+
 ## Variables
 
 | Variable | Default | Description |
@@ -27,7 +42,7 @@ make image CONCTL_BIN=/path/to/conctl
 | `RUNTIME` | `docker` | Container runtime (`docker` / `podman` / `container`) |
 | `CONCTL_BIN` | — | Local conctl binary path (skips download) |
 | `CONCTL_VER` | `latest` | Release tag to download if `CONCTL_BIN` not set |
-| `IMAGE_NAME` | `conos` | Output image tag |
+| `IMAGE_NAME` | `conos` | Output image tag when building locally |
 
 ## Config profiles
 

@@ -14,14 +14,14 @@ brief_output = "/srv/conos/context/system-state.md"
 
 [base]
 runner = "picoclaw"
-provider = "openrouter"
+provider = "anthropic"
 api_key_env = "CONOS_API_KEY"
 
 [base.officer]
-model = "anthropic/claude-opus-4-6"
+model = "claude-sonnet-4-6"
 
 [base.operator]
-model = "anthropic/claude-sonnet-4.6"
+model = "claude-sonnet-4-6"
 
 [[agents]]
 name = "concierge"

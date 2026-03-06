@@ -1,7 +1,7 @@
 id: CON-AGENT-001
 description: All agent directories must have correct permissions and ownership
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: agent_dir_permissions

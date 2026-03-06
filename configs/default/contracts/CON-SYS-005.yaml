@@ -1,7 +1,7 @@
 id: CON-SYS-005
 description: Audit log directory must be writable
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: audit_log_writable

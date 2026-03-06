@@ -1,0 +1,11 @@
+[Unit]
+Description=ConOS Artifact Auth
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/conctl artifact-auth
+Restart=always
+RuntimeDirectory=conos
+
+[Install]
+WantedBy=multi-user.target

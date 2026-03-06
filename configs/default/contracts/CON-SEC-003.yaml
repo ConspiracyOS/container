@@ -1,0 +1,28 @@
+id: CON-SEC-003
+description: Exposed artifacts must have a matching manifest and stable status entry
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: exposed_artifacts_have_manifests
+    command:
+      run: |
+        set -eu
+        fail=0
+        for dir in /srv/conos/status/artifacts/*; do
+          [ -d "$dir" ] || continue
+          id=$(basename "$dir")
+          manifest=$(find /srv/conos/artifacts -path "*/${id}/artifact.json" | head -1 || true)
+          if [ -z "$manifest" ]; then
+            echo "Missing manifest for exposed artifact: $id"
+            fail=1
+          fi
+        done
+        exit "$fail"
+      exit_code: 0
+    on_fail: alert
+    severity: high
+    category: integrity
+    what: user-exposed artifact exists without a matching manifest
+    verify: "find /srv/conos/status/artifacts -maxdepth 2 -type d && find /srv/conos/artifacts -name artifact.json"
+    affects: ["/srv/conos/status/artifacts", "/srv/conos/artifacts"]

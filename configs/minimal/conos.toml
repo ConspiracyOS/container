@@ -7,11 +7,11 @@ name = "my-conspiracy"
 
 [base]
 runner = "picoclaw"
-provider = "openrouter"
+provider = "anthropic"
 api_key_env = "CONOS_API_KEY"
 
 [base.operator]
-model = "anthropic/claude-sonnet-4.6"
+model = "claude-sonnet-4-6"
 
 [[agents]]
 name = "concierge"

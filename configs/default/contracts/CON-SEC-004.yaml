@@ -1,0 +1,25 @@
+id: CON-SEC-004
+description: User-exposed artifacts must not contain obvious secret material
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: exposed_artifacts_secret_scan
+    command:
+      run: |
+        set -eu
+        fail=0
+        for file in $(find /srv/conos/status/artifacts -type f \( -name '*.txt' -o -name '*.md' -o -name '*.json' -o -name '*.html' \) 2>/dev/null); do
+          if grep -Eq '(AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC )?PRIVATE KEY-----|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,})' "$file"; then
+            echo "Potential secret in exposed artifact: $file"
+            fail=1
+          fi
+        done
+        exit "$fail"
+      exit_code: 0
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: user-exposed artifact contains content matching secret patterns
+    verify: "find /srv/conos/status/artifacts -type f | xargs grep -nE 'AKIA|PRIVATE KEY|sk-|ghp_'"
+    affects: ["/srv/conos/status/artifacts"]

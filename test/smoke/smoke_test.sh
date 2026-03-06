@@ -86,7 +86,7 @@ check "audit log has entries" test -s "/srv/conos/logs/audit/$(date +%Y-%m-%d).l
 
 echo ""
 echo "--- 8. Git snapshot ---"
-check "/srv/con is a git repo" test -d /srv/conos/.git
+check "/srv/conos is a git repo" test -d /srv/conos/.git
 check "git has initial commit" git -C /srv/conos log --oneline -1
 check "git identity configured" git -C /srv/conos config user.name
 check ".gitignore excludes workspaces" grep -q "agents/\*/workspace/" /srv/conos/.gitignore

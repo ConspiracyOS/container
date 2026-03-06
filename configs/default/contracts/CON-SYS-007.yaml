@@ -1,0 +1,16 @@
+id: CON-SYS-007
+description: Linux audit logging service must be active
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: auditd_active
+    command:
+      run: "systemctl is-active --quiet auditd && auditctl -s >/dev/null"
+      exit_code: 0
+    on_fail: alert
+    severity: high
+    category: security
+    what: auditd is not active or audit subsystem is unavailable
+    verify: "systemctl status auditd --no-pager && auditctl -s"
+    affects: ["/var/log/audit", "audit pipeline"]

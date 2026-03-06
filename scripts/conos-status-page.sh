@@ -151,6 +151,27 @@ fi
 
 CONTRACT_TOTAL=$((PASS_COUNT + FAIL_COUNT))
 
+# Recent artifacts
+ARTIFACT_ROWS=""
+if [ -d /srv/conos/artifacts ]; then
+    RECENT_ARTIFACTS=$(find /srv/conos/artifacts -name artifact.json -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -8)
+    if [ -n "$RECENT_ARTIFACTS" ]; then
+        while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            manifest=$(echo "$line" | cut -d' ' -f2-)
+            title=$(jq -r '.title // "artifact"' "$manifest" 2>/dev/null || echo "artifact")
+            aid=$(jq -r '.artifact_id // empty' "$manifest" 2>/dev/null || echo "")
+            link=$(jq -r '.link_path // empty' "$manifest" 2>/dev/null || echo "")
+            exposure=$(jq -r '.exposure // "private"' "$manifest" 2>/dev/null || echo "private")
+            if [ -n "$link" ]; then
+                ARTIFACT_ROWS="${ARTIFACT_ROWS}<tr><td>${aid}</td><td>${title}</td><td>${exposure}</td><td><a href=\"${link}\">${link}</a></td></tr>"
+            else
+                ARTIFACT_ROWS="${ARTIFACT_ROWS}<tr><td>${aid}</td><td>${title}</td><td>${exposure}</td><td class=dim>private</td></tr>"
+            fi
+        done <<< "$RECENT_ARTIFACTS"
+    fi
+fi
+
 # Recent tasks
 RECENT_ROWS=""
 RECENT_TASKS=$(find /srv/conos/agents/*/processed -name "*.task" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -8)
@@ -304,6 +325,17 @@ if [ -n "$RECENT_ROWS" ]; then
 <table>
 <tr><th>Time</th><th>Agent</th><th>Summary</th></tr>
 ${RECENT_ROWS}
+</table>
+HTMLEOF
+fi
+
+# Artifacts
+if [ -n "$ARTIFACT_ROWS" ]; then
+    cat >> "$TMPFILE" << HTMLEOF
+<h2>Artifacts</h2>
+<table>
+<tr><th>ID</th><th>Title</th><th>Exposure</th><th>Link</th></tr>
+${ARTIFACT_ROWS}
 </table>
 HTMLEOF
 fi

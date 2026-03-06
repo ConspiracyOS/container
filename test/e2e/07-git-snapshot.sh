@@ -29,6 +29,6 @@ check "commit message contains trust level" sh -c "echo '$LATEST_MSG' | grep -qE
 echo ""
 echo "--- 7d. Verify git identity ---"
 AUTHOR=$(git -C /srv/conos log -1 --format=%an)
-check "commit author is con" [ "$AUTHOR" = "con" ]
+check "commit author is conos" [ "$AUTHOR" = "conos" ]
 
 finish

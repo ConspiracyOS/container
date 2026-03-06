@@ -1,7 +1,7 @@
 id: CON-AGENT-002
 description: Agent instructions (AGENTS.md) must be root-owned and read-only
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: agents_md_integrity

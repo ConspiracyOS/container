@@ -1,7 +1,7 @@
 id: CON-SYS-003
 description: Load average must not exceed 2x CPU cores
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: load_average

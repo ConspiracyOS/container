@@ -61,6 +61,13 @@ for what is available in your current session. Skills are the source of
 truth for how-to instructions. If a skill exists for what you are doing,
 use it.
 
+## Test Cost Policy
+
+- Do not run costly tests (especially E2E) as routine validation.
+- Only run costly tests when the human operator explicitly requests that run.
+- Prefer cheaper checks first (targeted/unit/contract checks).
+- If runtime agent validation is needed, prefer Ollama-backed agents when possible.
+
 ## When in Doubt
 
 - Check your skills first

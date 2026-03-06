@@ -1,7 +1,7 @@
 id: CON-SYS-002
 description: Memory available must remain above threshold
 type: detective
-trigger: schedule
+tags: [schedule]
 scope: global
 checks:
   - name: memory_available_percentage
