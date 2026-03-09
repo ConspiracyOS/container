@@ -9,3 +9,8 @@ checks:
       run: "touch /srv/conos/logs/audit/.healthcheck-probe && rm /srv/conos/logs/audit/.healthcheck-probe"
       exit_code: 0
     on_fail: halt_agents
+    severity: high
+    category: system
+    what: "Audit log directory not writable"
+    verify: "ls -la /srv/conos/logs/audit/"
+    affects: ["/srv/conos/logs/audit"]

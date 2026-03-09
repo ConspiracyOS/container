@@ -25,3 +25,8 @@ checks:
         done
         exit $fail
     on_fail: alert
+    severity: critical
+    category: security
+    what: "Agent git repository has unauthorized remote destination"
+    verify: "find /srv/conos/agents -maxdepth 4 -name '.git' -exec sh -c 'git -C $(dirname {}) remote -v' \\;"
+    affects: ["/srv/conos/agents"]

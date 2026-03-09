@@ -14,3 +14,8 @@ checks:
           exit 1
         fi
     on_fail: escalate
+    severity: critical
+    category: security
+    what: "Skills or agent instruction files not owned by root"
+    verify: "find /etc/conos/roles /etc/conos/agents -name '*.md' ! -user root"
+    affects: ["/etc/conos/roles", "/etc/conos/agents"]

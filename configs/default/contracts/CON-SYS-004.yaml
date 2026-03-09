@@ -9,3 +9,8 @@ checks:
       run: "result=$(ps -eo user,etimes,args --no-headers | grep '^a-' | grep '[c]on run' | awk '{if ($2 > 1800) print $1}' | head -1); [ -z \"$result\" ]"
       exit_code: 0
     on_fail: alert
+    severity: high
+    category: system
+    what: "Agent session running longer than 30 minutes"
+    verify: "ps -eo user,etimes,args --no-headers | grep '^a-'"
+    affects: ["agent processes"]

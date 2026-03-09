@@ -9,3 +9,8 @@ checks:
       run: "result=$(echo $(cat /proc/loadavg | cut -d' ' -f1) $(nproc) | awk '{printf \"%.0f\", ($1 / $2) * 100}'); [ \"$result\" -le 200 ]"
       exit_code: 0
     on_fail: halt_agents
+    severity: high
+    category: system
+    what: "Load average exceeds 2x CPU core count"
+    verify: "cat /proc/loadavg && nproc"
+    affects: ["system load"]

@@ -1,0 +1,37 @@
+# ConspiracyOS configuration for OpenClaw users
+# Agents use OpenClaw's headless acpx CLI as their runtime.
+# See docs/guides/openclaw-integration.md for setup instructions.
+
+[system]
+name = "my-conspiracy"
+
+[base]
+runner = "acpx"
+provider = "anthropic"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[base.officer]
+model = "claude-sonnet-4-20250514"
+
+[base.worker]
+model = "claude-haiku-4-5-20251001"
+
+[contracts.system]
+healthcheck_interval = "120s"
+
+[dashboard]
+enabled = false
+
+[[agents]]
+name = "concierge"
+tier = "operator"
+mode = "on-demand"
+roles = ["router"]
+runner_args = ["--session", "conos-concierge", "--yes"]
+
+[[agents]]
+name = "sysadmin"
+tier = "operator"
+mode = "on-demand"
+roles = ["sysadmin"]
+runner_args = ["--session", "conos-sysadmin", "--yes"]

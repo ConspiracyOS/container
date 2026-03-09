@@ -9,3 +9,8 @@ checks:
       run: "result=$(free | awk '/^Mem:/ {printf \"%.0f\", $7/$2 * 100}'); [ \"$result\" -ge 10 ]"
       exit_code: 0
     on_fail: halt_agents
+    severity: critical
+    category: system
+    what: "Available memory below 10% threshold"
+    verify: "free -h"
+    affects: ["system memory"]

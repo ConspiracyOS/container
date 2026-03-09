@@ -9,3 +9,8 @@ checks:
       run: "stat -c '%U %G %a' /etc/conos/env | awk '{exit ($1==\"root\" && $2==\"root\" && $3==\"600\") ? 0 : 1}'"
       exit_code: 0
     on_fail: alert
+    severity: critical
+    category: security
+    what: "/etc/conos/env not mode 600 root:root — secrets may be readable"
+    verify: "stat -c '%U %G %a' /etc/conos/env"
+    affects: ["/etc/conos/env"]

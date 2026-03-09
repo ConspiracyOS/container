@@ -9,3 +9,8 @@ checks:
       path: scripts/check-agent-perms.sh
       timeout: 10s
     on_fail: alert
+    severity: high
+    category: agents
+    what: "Agent directory has incorrect permissions or ownership"
+    verify: "ls -la /srv/conos/agents/"
+    affects: ["/srv/conos/agents"]

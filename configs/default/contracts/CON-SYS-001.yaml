@@ -9,3 +9,8 @@ checks:
       run: "result=$(df /srv/conos --output=pcent | tail -1 | tr -d ' %'); [ $((100 - result)) -ge 15 ]"
       exit_code: 0
     on_fail: halt_agents
+    severity: critical
+    category: system
+    what: "Disk free space below 15% threshold"
+    verify: "df /srv/conos --output=pcent"
+    affects: ["/srv/conos"]

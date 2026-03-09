@@ -9,3 +9,8 @@ checks:
       path: scripts/check-agents-md.sh
       timeout: 10s
     on_fail: alert
+    severity: high
+    category: agents
+    what: "Agent instructions (AGENTS.md) not root-owned or not read-only"
+    verify: "find /srv/conos/agents -name AGENTS.md -exec stat -c '%U %G %a %n' {} \\;"
+    affects: ["/srv/conos/agents/*/workspace/AGENTS.md"]
