@@ -48,5 +48,9 @@ Cmnd_Alias CONOS_NET_OPS = \
 Cmnd_Alias CONOS_BOOTSTRAP_OPS = \
     /usr/local/bin/conctl bootstrap
 
+Cmnd_Alias CONOS_CONCTL_PKG = \
+    /usr/local/bin/conctl package install *, \
+    /usr/local/bin/conctl package remove *
+
 a-sysadmin ALL=(root) NOPASSWD: CONOS_AGENT_OPS, CONOS_PKG_OPS, CONOS_USER_OPS, \
-    CONOS_FILE_OPS, CONOS_SVC_OPS, CONOS_NET_OPS, CONOS_BOOTSTRAP_OPS
+    CONOS_FILE_OPS, CONOS_SVC_OPS, CONOS_NET_OPS, CONOS_BOOTSTRAP_OPS, CONOS_CONCTL_PKG
