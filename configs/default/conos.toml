@@ -1,6 +1,6 @@
 # ConspiracyOS default configuration.
-# Simple: set CONOS_API_KEY env var and everything works.
-# Per-tier keys: set CON_OFFICER_API_KEY, CON_OPERATOR_API_KEY, etc.
+# Set CONOS_API_KEY to your LLM provider's API key (Anthropic, OpenRouter, etc.)
+# Per-tier keys: set api_key_env per tier to use different env vars.
 
 [system]
 name = "my-conspiracy"

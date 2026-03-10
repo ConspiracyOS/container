@@ -1,0 +1,41 @@
+id: CON-SEC-005
+description: Critical files must have immutable bit set
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: config_immutable
+    script:
+      inline: |
+        found=$(lsattr /etc/conos/conos.toml /etc/conos/env /etc/conos/artifact-signing.key /usr/local/bin/conctl 2>/dev/null | grep -v '^....i')
+        [ -z "$found" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Critical files missing immutable bit (chattr +i)"
+    verify: "lsattr /etc/conos/conos.toml /etc/conos/env /usr/local/bin/conctl"
+    affects: ["/etc/conos/", "/usr/local/bin/conctl"]
+
+  - name: skills_immutable
+    script:
+      inline: |
+        found=$(find /etc/conos/roles -name '*.md' -exec lsattr {} + 2>/dev/null | grep -v '^....i')
+        [ -z "$found" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Skill files missing immutable bit"
+    verify: "find /etc/conos/roles -name '*.md' -exec lsattr {} +"
+    affects: ["/etc/conos/roles"]
+
+  - name: sudoers_immutable
+    script:
+      inline: |
+        found=$(find /etc/sudoers.d -name 'conos-*' -exec lsattr {} + 2>/dev/null | grep -v '^....i')
+        [ -z "$found" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Sudoers files missing immutable bit"
+    verify: "find /etc/sudoers.d -name 'conos-*' -exec lsattr {} +"
+    affects: ["/etc/sudoers.d/"]
