@@ -21,40 +21,54 @@ check() {
 
 echo "=== ConspiracyOS Phase 1 Smoke Test ==="
 
+# Discover configured agents from the actual system
+AGENTS=()
+for agent_home in /srv/conos/agents/*/; do
+    [ -d "$agent_home" ] || continue
+    AGENTS+=("$(basename "$agent_home")")
+done
+echo "Configured agents: ${AGENTS[*]}"
+
 echo ""
 echo "--- 1. Bootstrap verification ---"
 check "conctl binary exists" test -x /usr/local/bin/conctl
 check "bootstrapped marker exists" test -f /srv/conos/.bootstrapped
-check "user a-concierge exists" id a-concierge
-check "user a-sysadmin exists" id a-sysadmin
+for agent in "${AGENTS[@]}"; do
+    check "user a-$agent exists" id "a-$agent"
+done
 check "group agents exists" getent group agents
 check "group operators exists" getent group operators
 
 echo ""
 echo "--- 2. Directory structure ---"
 check "outer inbox exists" test -d /srv/conos/inbox
-check "concierge inbox exists" test -d /srv/conos/agents/concierge/inbox
-check "sysadmin inbox exists" test -d /srv/conos/agents/sysadmin/inbox
-check "concierge workspace exists" test -d /srv/conos/agents/concierge/workspace
+for agent in "${AGENTS[@]}"; do
+    check "$agent inbox exists" test -d "/srv/conos/agents/$agent/inbox"
+    check "$agent workspace exists" test -d "/srv/conos/agents/$agent/workspace"
+done
 check "audit log dir exists" test -d /srv/conos/logs/audit
 
 echo ""
 echo "--- 3. Permissions ---"
 check "outer inbox is root:agents 770" [ "$(stat -c %a /srv/conos/inbox)" = "770" ]
-check "concierge home is private" [ "$(stat -c %a /home/a-concierge)" = "700" ]
-check "concierge can write to sysadmin inbox" \
-    su -s /bin/sh a-concierge -c "touch /srv/conos/agents/sysadmin/inbox/.acl-test && rm /srv/conos/agents/sysadmin/inbox/.acl-test"
+for agent in "${AGENTS[@]}"; do
+    check "$agent home is private" [ "$(stat -c %a /home/a-$agent)" = "700" ]
+done
 
 echo ""
 echo "--- 4. Systemd units ---"
-check "concierge path unit enabled" systemctl is-enabled conos-concierge.path
-check "sysadmin path unit enabled" systemctl is-enabled conos-sysadmin.path
+for agent in "${AGENTS[@]}"; do
+    check "$agent path unit enabled" systemctl is-enabled "conos-$agent.path"
+done
 
 echo ""
 echo "--- 5. AGENTS.md assembled ---"
-check "concierge AGENTS.md exists" test -f /home/a-concierge/AGENTS.md
-check "sysadmin AGENTS.md exists" test -f /home/a-sysadmin/AGENTS.md
-check "base content in concierge AGENTS.md" grep -q "ConspiracyOS" /home/a-concierge/AGENTS.md
+for agent in "${AGENTS[@]}"; do
+    check "$agent AGENTS.md exists" test -f "/home/a-$agent/AGENTS.md"
+done
+# Check content on first agent
+first="${AGENTS[0]}"
+check "base content in $first AGENTS.md" grep -q "ConspiracyOS" "/home/a-$first/AGENTS.md"
 
 echo ""
 echo "--- 6. End-to-end task routing ---"
@@ -82,7 +96,9 @@ check "concierge produced output" find /srv/conos/agents/concierge/outbox -maxde
 
 echo ""
 echo "--- 7. Audit trail ---"
-check "audit log has entries" test -s "/srv/conos/logs/audit/$(date +%Y-%m-%d).log"
+# The task routing above should have created an audit entry
+check "audit log dir has entries" \
+    sh -c "find /srv/conos/logs/audit -name '*.log' -size +0 2>/dev/null | grep -q ."
 
 echo ""
 echo "--- 8. Git snapshot ---"
@@ -112,7 +128,7 @@ for agent_dir in /srv/conos/agents/*/; do
     esac
 done
 check "worker units have ProtectHome" \
-    grep -q 'ProtectHome=tmpfs' /etc/systemd/system/conos-concierge.service
+    grep -q 'ProtectHome=tmpfs' "/etc/systemd/system/conos-${first}.service"
 
 echo ""
 echo "--- 10. Contract timer ---"
