@@ -135,7 +135,11 @@ echo "--- 10. Contract timer ---"
 check "healthcheck timer active" systemctl is-active conos-healthcheck.timer
 # Trigger healthcheck to ensure contracts.log exists (timer may not have fired yet on fresh boot)
 conctl healthcheck >/dev/null 2>&1 || true
-check "contracts log exists" test -f /srv/conos/logs/audit/contracts.log
+if ls /srv/conos/contracts/*.yaml >/dev/null 2>&1; then
+    check "contracts log exists" test -f /srv/conos/logs/audit/contracts.log
+else
+    echo "  SKIP: no contracts installed"
+fi
 
 echo ""
 echo "--- 11. Skill injection ---"

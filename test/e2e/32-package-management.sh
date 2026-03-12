@@ -30,7 +30,7 @@ echo "--- 3. Package list ---"
 conctl package install bc --agent concierge --save >/dev/null 2>&1 || true
 output=$(conctl package list --agent concierge 2>&1)
 check "list shows bc for concierge" \
-    echo "$output" | grep -q "bc"
+    sh -c "echo '$output' | grep -q 'bc'"
 
 echo ""
 echo "--- 4. Package remove ---"

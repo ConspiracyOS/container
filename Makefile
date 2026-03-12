@@ -9,7 +9,7 @@ RUNTIME      ?= docker
 CONCTL_BIN   ?=
 CONCTL_VER   ?= latest
 
-.PHONY: image deploy run stop task status logs responses clean verify-conctl-bin test-conctl-bin-guard
+.PHONY: image deploy run stop task status logs responses clean verify-conctl-bin test-conctl-bin-guard test
 
 # Acquire conctl binary: copy from CONCTL_BIN or download from releases.
 $(CURDIR)/conctl:
@@ -102,6 +102,25 @@ logs:
 # Show latest responses from each agent outbox
 responses:
 	$(RUNTIME) exec $(NAME) conctl responses
+
+# Run smoke + structural e2e tests inside the container.
+# Tests requiring LLM interaction (01-17) are excluded.
+test:
+	@echo "=== Running smoke tests ==="
+	$(RUNTIME) exec $(NAME) bash /test/smoke/smoke_test.sh
+	@echo ""
+	@echo "=== Running structural e2e tests ==="
+	@failed=0; \
+	for t in $$($(RUNTIME) exec $(NAME) sh -c 'ls /test/e2e/3[1-9]-*.sh 2>/dev/null'); do \
+		echo "--- $$t ---"; \
+		$(RUNTIME) exec $(NAME) bash $$t || failed=$$((failed + 1)); \
+		echo ""; \
+	done; \
+	if [ $$failed -gt 0 ]; then \
+		echo "$$failed e2e test suite(s) failed"; \
+		exit 1; \
+	fi; \
+	echo "=== All tests passed ==="
 
 clean:
 	rm -f $(CURDIR)/conctl
