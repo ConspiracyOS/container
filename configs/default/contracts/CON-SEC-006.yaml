@@ -1,0 +1,31 @@
+id: CON-SEC-006
+description: nftables per-agent outbound filtering is active
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: nftables_active
+    script:
+      inline: |
+        # Verify the conos table exists and has drop rules for agent UIDs
+        nft list table inet conos >/dev/null 2>&1
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "nftables conos table missing — agents have unrestricted network access"
+    verify: "nft list table inet conos"
+    affects: ["/etc/nftables.conf"]
+
+  - name: nftables_deny_rules
+    script:
+      inline: |
+        # Each agent should have a deny rule. Count drop rules vs agent count.
+        drop_count=$(nft list table inet conos 2>/dev/null | grep -c 'counter.*drop')
+        agent_count=$(ls -d /srv/conos/agents/*/ 2>/dev/null | wc -l)
+        [ "$drop_count" -ge "$agent_count" ]
+    on_fail: alert
+    severity: high
+    category: security
+    what: "nftables drop rules don't match agent count — some agents may lack network filtering"
+    verify: "nft list table inet conos | grep drop"
+    affects: ["/etc/nftables.conf"]

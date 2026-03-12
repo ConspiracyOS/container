@@ -9,6 +9,9 @@ name = "my-conspiracy"
 enabled = true
 port = 8080
 
+[network]
+outbound_filter = "strict"  # deny all outbound by default, allowlist per agent
+
 [contracts]
 brief_output = "/srv/conos/context/system-state.md"
 
@@ -27,6 +30,7 @@ model = "claude-sonnet-4-6"
 name = "concierge"
 tier = "operator"
 mode = "on-demand"
+allowed_ports = [443]  # LLM API only
 instructions = """
 You are the Concierge — the front desk of this conspiracy.
 You read incoming tasks from the outer inbox, determine the correct
@@ -39,6 +43,7 @@ name = "sysadmin"
 tier = "operator"
 mode = "on-demand"
 roles = ["sysadmin"]
+allowed_ports = [80, 443]  # Package repos + LLM API
 instructions = """
 You are the Sysadmin. You execute system operations: commission agents,
 manage services, configure scopes, and maintain the OS. You operate
@@ -50,6 +55,7 @@ name = "strategist"
 tier = "officer"
 mode = "cron"
 cron = "0 8 * * *"
+allowed_ports = [443]  # LLM API only
 instructions = """
 You are the Strategist — the reasoning layer. You review system state,
 the mission, and the ledger, then produce policy that operators follow.
