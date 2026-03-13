@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download conctl binary
+        env:
+          CONCTL_VER: latest
+        run: |
+          curl -fsSL \
+            https://github.com/ConspiracyOS/conctl/releases/${CONCTL_VER}/download/conctl-linux-amd64 \
+            -o conctl
+          chmod +x conctl
+
+      - name: Build container image (minimal profile)
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE=ubuntu:24.04 \
+            --build-arg PROFILE=minimal \
+            -t conos-test \
+            -f Containerfile \
+            .
+
+      - name: Build container image (default profile)
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE=ubuntu:24.04 \
+            --build-arg PROFILE=default \
+            -t conos-test-default \
+            -f Containerfile \
+            .

@@ -7,7 +7,7 @@ name = "my-conspiracy"
 
 [base]
 runner = "picoclaw"
-provider = "anthropic"
+provider = "openrouter"
 api_key_env = "CONOS_API_KEY"
 
 [base.operator]
