@@ -25,8 +25,16 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 
 # Install conctl binary (pre-built via: make image, or supplied as CONCTL_BIN)
 # PicoClaw agent runtime is imported as a Go library — no separate binary needed
-COPY conctl /usr/local/bin/conctl
-RUN chmod +x /usr/local/bin/conctl
+# CI provides conctl-linux-{amd64,arm64}; local builds provide a single "conctl" file.
+ARG TARGETARCH
+COPY conctl* /tmp/conctl-candidates/
+RUN if [ -f /tmp/conctl-candidates/conctl-linux-${TARGETARCH} ]; then \
+      cp /tmp/conctl-candidates/conctl-linux-${TARGETARCH} /usr/local/bin/conctl; \
+    else \
+      cp /tmp/conctl-candidates/conctl /usr/local/bin/conctl; \
+    fi && \
+    chmod +x /usr/local/bin/conctl && \
+    rm -rf /tmp/conctl-candidates
 
 # Config profile: override at build time with --build-arg PROFILE=default
 ARG PROFILE=minimal
