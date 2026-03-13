@@ -9,7 +9,7 @@ For first-time users, prefer the published image instead of building from source
 ## Quick start (published image)
 
 ```bash
-docker run -d --name conos --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw --restart unless-stopped -e CONOS_OPENROUTER_API_KEY=sk-or-your-key ghcr.io/conspiracyos/conos:latest
+docker run -d --name conos --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw --restart unless-stopped -e CONOS_API_KEY=sk-or-your-key ghcr.io/conspiracyos/conos:latest
 ```
 
 ## Build
