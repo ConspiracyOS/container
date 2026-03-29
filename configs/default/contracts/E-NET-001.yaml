@@ -1,0 +1,53 @@
+id: E-NET-001
+description: Outbound to non-allowlisted host is blocked by nftables meta skuid drop rule
+type: enforcement
+tags: [enforcement]
+scope: global
+checks:
+  - name: outbound-non-allowlisted-blocked
+    script:
+      inline: |
+        # Preflight: confirm agent user exists and su works
+        su -s /bin/sh a-concierge -c 'true' 2>/dev/null \
+          || { echo "su preflight failed: check agent shell for a-concierge"; exit 2; }
+
+        # Preflight: confirm curl is available in the container
+        command -v curl >/dev/null 2>&1 \
+          || { echo "curl not found — cannot run network enforcement check"; exit 2; }
+
+        # Resolve agent UID — nft displays numeric UIDs, not usernames
+        AGENT_UID=$(id -u a-concierge 2>/dev/null) \
+          || { echo "SKIP: a-concierge user not found"; exit 2; }
+
+        # Parse drop counter packet count for agent before attempt.
+        # nft list ruleset emits:  meta skuid <uid> counter packets X bytes Y drop
+        PRE=$(nft list ruleset 2>/dev/null \
+          | awk "/meta skuid $AGENT_UID counter/{
+              for(i=1;i<=NF;i++) if(\$i==\"packets\") {print \$(i+1); exit}
+            }")
+        PRE=${PRE:-0}
+
+        # Attempt outbound to a non-allowlisted port (8080) as agent user.
+        # Port 443 is allowlisted for concierge, so we must use a different port.
+        su -s /bin/sh a-concierge -c \
+          'curl -m 2 --silent http://1.1.1.1:8080/' 2>/dev/null || true
+
+        # Retry up to 3 times to allow kernel to process the drop counter
+        POST=$PRE
+        for _i in 1 2 3; do
+          sleep 0.2
+          POST=$(nft list ruleset 2>/dev/null \
+            | awk "/meta skuid $AGENT_UID counter/{
+                for(i=1;i<=NF;i++) if(\$i==\"packets\") {print \$(i+1); exit}
+              }")
+          POST=${POST:-0}
+          [ "$POST" -gt "$PRE" ] && break
+        done
+
+        [ "$POST" -gt "$PRE" ] || { echo "FAIL: drop counter did not increase (pre=$PRE post=$POST)"; exit 1; }
+    on_fail: fail
+    severity: critical
+    category: enforcement
+    what: "Agent outbound to non-allowlisted host was not dropped by nftables"
+    verify: "nft list ruleset | grep 'a-concierge.*counter'"
+    affects: ["/etc/conos/"]

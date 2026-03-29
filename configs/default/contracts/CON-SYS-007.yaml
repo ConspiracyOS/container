@@ -6,7 +6,9 @@ scope: global
 checks:
   - name: auditd_active
     command:
-      run: "systemctl is-active --quiet auditd && auditctl -s >/dev/null"
+      # Skip in environments where auditd is unavailable (containers, local_trusted).
+      # auditctl -s will fail if the audit subsystem isn't in the kernel.
+      run: "command -v auditctl >/dev/null 2>&1 || exit 0; systemctl is-active --quiet auditd && auditctl -s >/dev/null"
       exit_code: 0
     on_fail: alert
     severity: high

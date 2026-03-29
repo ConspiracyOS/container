@@ -54,3 +54,12 @@ jobs:
             --push \
             -f Containerfile \
             .
+
+      - name: Ensure package is public
+        run: |
+          PACKAGE="conos${{ matrix.suffix }}"
+          curl -fsS -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/orgs/ConspiracyOS/packages/container/${PACKAGE}" \
+            -d '{"visibility":"public"}' || echo "::warning::Could not set package visibility — check org settings"

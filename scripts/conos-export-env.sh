@@ -7,6 +7,6 @@
 # Agents receive env vars via systemd EnvironmentFile= injection,
 # never by reading the file directly. This prevents any agent from
 # reading secrets belonging to other agents.
-tr '\0' '\n' < /proc/1/environ | grep -E '^(CONOS_|TS_)' > /etc/conos/env 2>/dev/null
+tr '\0' '\n' < /proc/1/environ | grep -E '^(CONOS_|TS_|CLAUDE_|ANTHROPIC_)' > /etc/conos/env 2>/dev/null
 chmod 600 /etc/conos/env
 chown root:root /etc/conos/env

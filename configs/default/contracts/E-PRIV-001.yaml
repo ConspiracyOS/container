@@ -1,0 +1,27 @@
+id: E-PRIV-001
+description: Agent sudo escalation beyond sudoers allowlist is denied
+type: enforcement
+tags: [enforcement]
+scope: global
+checks:
+  - name: sudo-escalation-blocked
+    script:
+      inline: |
+        # Preflight: confirm su works
+        su -s /bin/sh a-concierge -c 'true' 2>/dev/null \
+          || { echo "su preflight failed for a-concierge"; exit 2; }
+
+        # Attempt: concierge tries to run an arbitrary command via sudo
+        # (sudo /bin/bash is not in the concierge sudoers allowlist)
+        RESULT=$(su -s /bin/sh a-concierge -c \
+          'sudo -n /bin/bash -c "id"' 2>&1)
+        echo "$RESULT" | grep -qE 'not in the sudoers|not allowed|a password is required|sorry' \
+          || { echo "FAIL: a-concierge could escalate via sudo — sudoers allowlist not enforced: $RESULT"; exit 1; }
+
+        echo "PASS: sudo escalation beyond allowlist denied"
+    on_fail: fail
+    severity: critical
+    category: enforcement
+    what: "Agent can escalate privileges via sudo beyond its allowlist"
+    verify: "sudo -l -U a-concierge"
+    affects: ["/etc/sudoers.d/"]

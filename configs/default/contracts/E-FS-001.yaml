@@ -1,0 +1,27 @@
+id: E-FS-001
+description: Cross-agent home directory read is blocked by chmod 700
+type: enforcement
+tags: [enforcement]
+scope: global
+checks:
+  - name: cross-agent-read-blocked
+    script:
+      inline: |
+        # Preflight: confirm su works for both agents
+        su -s /bin/sh a-concierge -c 'true' 2>/dev/null \
+          || { echo "su preflight failed for a-concierge"; exit 2; }
+        su -s /bin/sh a-sysadmin -c 'true' 2>/dev/null \
+          || { echo "su preflight failed for a-sysadmin"; exit 2; }
+
+        # Attempt: concierge tries to list sysadmin's home directory
+        RESULT=$(su -s /bin/sh a-concierge -c 'ls /home/a-sysadmin/ 2>&1')
+        echo "$RESULT" | grep -q 'Permission denied' \
+          || { echo "FAIL: a-concierge could read /home/a-sysadmin/ — chmod 700 not enforced"; exit 1; }
+
+        echo "PASS: cross-agent home directory read blocked (EACCES)"
+    on_fail: fail
+    severity: critical
+    category: enforcement
+    what: "Agent can read another agent's home directory — chmod 700 not enforced"
+    verify: "stat -c '%a %U' /home/a-concierge /home/a-sysadmin"
+    affects: ["/home/"]

@@ -1,0 +1,27 @@
+id: E-NET-002
+description: DNS tunneling via port 53 to external resolvers is blocked (hard gate)
+type: enforcement
+tags: [enforcement]
+scope: global
+checks:
+  - name: external-dns-dropped
+    script:
+      inline: |
+        # Verify the nftables ruleset has the scoped accept + drop pattern for port 53.
+        # This is a static rule check (does not require running an agent).
+
+        # Must have scoped accept for 127.0.0.53
+        nft list ruleset 2>/dev/null | grep 'dport 53' | grep -q '127\.0\.0\.53.*accept' \
+          || { echo "FAIL: no scoped DNS accept rule for 127.0.0.53"; exit 1; }
+
+        # Must have drop rule for remaining port 53 traffic
+        nft list ruleset 2>/dev/null | grep 'dport 53' | grep -q 'drop' \
+          || { echo "FAIL: no DNS drop rule — external DNS tunneling not blocked"; exit 1; }
+
+        echo "PASS: DNS scoped to 127.0.0.53, external port 53 dropped"
+    on_fail: fail
+    severity: critical
+    category: enforcement
+    what: "nftables has no DNS tunneling restriction — port 53 open to all destinations"
+    verify: "nft list ruleset | grep 'dport 53'"
+    affects: ["/etc/conos/"]

@@ -116,10 +116,30 @@ Thresholds are defined in `[contracts.system]` in the outer config.
 
 When the heartbeat escalates to you:
 
-1. Read the failure message — it includes the CON-ID and details
-2. Check the contract YAML to understand what failed
-3. Investigate the root cause (logs, filesystem state, network)
-4. Remediate the issue
-5. Verify the next heartbeat cycle passes
-6. If the contract needs updating (false positive, threshold change),
+1. Read the failure message — it includes the CON-ID, check name, and what failed
+2. Check the remediation table below for a known fix
+3. If not in the table, check the contract YAML to understand what failed
+4. Investigate the root cause (logs, filesystem state, network)
+5. Remediate the issue
+6. Verify the next heartbeat cycle passes
+7. If the contract needs updating (false positive, threshold change),
    update the YAML — do NOT disable the contract without CSO approval
+
+## Contract remediation table
+
+Known escalation contracts and their fixes. Use these commands when you
+receive a healthcheck escalation task matching these contract IDs.
+
+| Contract | What failed | Fix command |
+|----------|------------|-------------|
+| `CON-SEC-001` | Skill files not owned by root | `sudo chown root:root /etc/conos/roles -R` |
+| `CON-SEC-004` | Artifacts contain secrets | Remove secrets from artifacts in `/srv/conos/agents/*/workspace/`, then re-sign |
+| `CON-SEC-005` | Critical files missing immutable bit | `sudo chattr +i /etc/conos/conos.toml /etc/conos/env /etc/conos/artifact-signing.key /usr/local/bin/conctl` and `sudo find /etc/conos/roles -name '*.md' -exec chattr +i {} +` and `sudo find /etc/sudoers.d -name 'conos-*' -exec chattr +i {} +` |
+| `CON-SEC-006` | nftables conos table missing | `sudo conctl bootstrap` (regenerates nftables rules from config) |
+| `CON-SYS-001` | Disk space critical | Check `/srv/conos/agents/*/workspace/` for large files, clean processed tasks, rotate logs |
+| `CON-SYS-002` | Memory critical | Restart the heaviest agent: `sudo systemctl restart conos-<agent>.service` |
+| `CON-SYS-003` | Load critical | Stop non-essential agents: `sudo systemctl stop conos-<agent>.service` |
+| `CON-SYS-005` | Audit log not writable | Check disk space and permissions on `/srv/conos/logs/audit/` |
+
+After fixing, wait for the next healthcheck cycle to verify the contract
+passes. Do NOT mark the issue as resolved until the healthcheck confirms it.

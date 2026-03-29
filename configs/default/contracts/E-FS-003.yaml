@@ -1,0 +1,30 @@
+id: E-FS-003
+description: Agent cannot write to /etc/conos/ (root-owned config directory)
+type: enforcement
+tags: [enforcement]
+scope: global
+checks:
+  - name: etc-conos-write-blocked
+    script:
+      inline: |
+        # Preflight: confirm su works
+        su -s /bin/sh a-concierge -c 'true' 2>/dev/null \
+          || { echo "su preflight failed for a-concierge"; exit 2; }
+
+        # Attempt: concierge tries to create a file in /etc/conos/
+        RESULT=$(su -s /bin/sh a-concierge -c \
+          'touch /etc/conos/pwned 2>&1')
+        echo "$RESULT" | grep -q 'Permission denied' \
+          || { echo "FAIL: a-concierge could write to /etc/conos/ — root ownership not enforced"; exit 1; }
+
+        # Confirm no file was actually created
+        [ ! -f /etc/conos/pwned ] \
+          || { echo "FAIL: file was created despite permission check — manual cleanup required"; exit 1; }
+
+        echo "PASS: /etc/conos/ write blocked (EACCES — root-owned)"
+    on_fail: fail
+    severity: critical
+    category: enforcement
+    what: "Agent can write to /etc/conos/ — system config modification vector open"
+    verify: "stat -c '%a %U' /etc/conos"
+    affects: ["/etc/conos/"]
