@@ -1,0 +1,81 @@
+id: CON-AGENT-SYSADMIN
+description: Sysadmin agent must operate within its hardened boundary
+type: detective
+tags: [schedule]
+scope: global
+checks:
+  - name: sysadmin_no_extra_sudoers
+    script:
+      inline: |
+        # Sysadmin's sudoers file must match the shipped default exactly.
+        # Any modification could indicate compromise or drift.
+        expected_hash=$(sha256sum /etc/conos/sudoers.d/conos-sysadmin 2>/dev/null | cut -d' ' -f1)
+        actual_hash=$(sha256sum /etc/sudoers.d/conos-sysadmin 2>/dev/null | cut -d' ' -f1)
+        [ "$expected_hash" = "$actual_hash" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Sysadmin sudoers file differs from shipped default — possible privilege drift"
+    verify: "diff /etc/conos/sudoers.d/conos-sysadmin /etc/sudoers.d/conos-sysadmin"
+    affects: ["/etc/sudoers.d/conos-sysadmin"]
+
+  - name: sysadmin_agents_md_integrity
+    script:
+      inline: |
+        # AGENTS.md is compiled at bootstrap with a SHA256 hash.
+        # Runner verifies on each run, but the contract catches drift between runs.
+        expected=$(cat /home/a-sysadmin/.agents-md-sha256 2>/dev/null)
+        actual=$(sha256sum /home/a-sysadmin/AGENTS.md 2>/dev/null | cut -d' ' -f1)
+        [ -n "$expected" ] && [ "$expected" = "$actual" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Sysadmin AGENTS.md has been modified since bootstrap"
+    verify: "sha256sum /home/a-sysadmin/AGENTS.md"
+    affects: ["/home/a-sysadmin/AGENTS.md"]
+
+  - name: sysadmin_inbox_ownership
+    script:
+      inline: |
+        # Sysadmin inbox must be owned by root (tasks are delivered by root-owned
+        # healthcheck process). If ownership changes, task provenance is compromised.
+        owner=$(stat -c '%U' /srv/conos/agents/sysadmin/inbox 2>/dev/null)
+        [ "$owner" = "root" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Sysadmin inbox directory not owned by root — task provenance compromised"
+    verify: "stat /srv/conos/agents/sysadmin/inbox"
+    affects: ["/srv/conos/agents/sysadmin/inbox"]
+
+  - name: sysadmin_no_cron
+    script:
+      inline: |
+        # Sysadmin should not have user-level cron jobs. All scheduled work
+        # goes through systemd timers managed by root.
+        ! crontab -u a-sysadmin -l 2>/dev/null | grep -v '^#' | grep -q .
+    on_fail: alert
+    severity: high
+    category: security
+    what: "Sysadmin has user-level cron jobs (should use systemd timers only)"
+    verify: "crontab -u a-sysadmin -l"
+    affects: ["/var/spool/cron/crontabs/a-sysadmin"]
+
+  - name: sysadmin_workspace_no_secrets
+    script:
+      inline: |
+        # Sysadmin workspace should not contain leaked secrets.
+        # Scan for common patterns (API keys, tokens, passwords).
+        found=$(grep -rIl \
+          -e 'sk-[a-zA-Z0-9]\{20,\}' \
+          -e 'ANTHROPIC_API_KEY' \
+          -e 'OPENAI_API_KEY' \
+          -e 'password.*=.*[^*]' \
+          /srv/conos/agents/sysadmin/workspace/ 2>/dev/null || true)
+        [ -z "$found" ]
+    on_fail: escalate
+    severity: critical
+    category: security
+    what: "Sysadmin workspace contains potential secrets"
+    verify: "grep -rIl 'sk-' /srv/conos/agents/sysadmin/workspace/"
+    affects: ["/srv/conos/agents/sysadmin/workspace"]
