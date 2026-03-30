@@ -46,7 +46,9 @@ AGENTS_ROWS=""
 TOTAL_PENDING=0
 TOTAL_PROCESSED=0
 AGENT_COUNT=0
-ACTIVE_COUNT=0
+RUNNING_COUNT=0
+IDLE_COUNT=0
+STOPPED_COUNT=0
 
 if [ -d /srv/conos/agents ]; then
     for agent_dir in /srv/conos/agents/*/; do
@@ -55,21 +57,27 @@ if [ -d /srv/conos/agents ]; then
         svc="conos-${agent}"
         AGENT_COUNT=$((AGENT_COUNT + 1))
 
-        # Service state
-        svc_state=$(systemctl is-active "${svc}.service" 2>/dev/null || echo "inactive")
-        path_state=$(systemctl is-active "${svc}.path" 2>/dev/null || echo "inactive")
-        timer_state=$(systemctl is-active "${svc}.timer" 2>/dev/null || echo "inactive")
+        # Service state (systemctl exits non-zero for inactive/activating,
+        # so || would double-append; use "true" to suppress exit code)
+        svc_state=$(systemctl is-active "${svc}.service" 2>/dev/null || true)
+        svc_state=${svc_state:-inactive}
+        path_state=$(systemctl is-active "${svc}.path" 2>/dev/null || true)
+        path_state=${path_state:-inactive}
+        timer_state=$(systemctl is-active "${svc}.timer" 2>/dev/null || true)
+        timer_state=${timer_state:-inactive}
 
         if [ "$svc_state" = "activating" ] || [ "$svc_state" = "active" ]; then
             state="running"
             badge="mark"
-            ACTIVE_COUNT=$((ACTIVE_COUNT + 1))
+            RUNNING_COUNT=$((RUNNING_COUNT + 1))
         elif [ "$path_state" = "active" ] || [ "$timer_state" = "active" ]; then
             state="idle"
             badge=""
+            IDLE_COUNT=$((IDLE_COUNT + 1))
         else
             state="stopped"
             badge="del"
+            STOPPED_COUNT=$((STOPPED_COUNT + 1))
         fi
 
         # Pending / processed counts
@@ -108,14 +116,7 @@ if [ -d /srv/conos/agents ]; then
             state_html="${state}"
         fi
 
-        resp_cell=""
-        if [ -n "$response_preview" ]; then
-            resp_cell="<td class=dim>${response_preview}</td>"
-        else
-            resp_cell="<td class=dim>—</td>"
-        fi
-
-        AGENTS_ROWS="${AGENTS_ROWS}<tr><td><b>${agent}</b></td><td>${state_html}</td><td>${pending}</td><td>${processed}</td><td class=dim>${last_active}</td><td>${ws_size}</td>${resp_cell}</tr>"
+        AGENTS_ROWS="${AGENTS_ROWS}<tr><td data-label=Name><b>${agent}</b></td><td data-label=State>${state_html}</td><td data-label=Pending>${pending}</td><td data-label=Done>${processed}</td><td data-label='Last active' class=dim>${last_active}</td><td data-label=Disk>${ws_size}</td><td data-label=Response class=dim>${response_preview:-—}</td></tr>"
     done
 fi
 
@@ -142,9 +143,9 @@ if [ -f "$CONTRACTS_LOG" ]; then
         detail=$(echo "$line" | sed 's/.*\(PASS\|FAIL\)//' | sed 's/^ *//')
 
         if [ "$result" = "PASS" ]; then
-            CONTRACTS_ROWS="${CONTRACTS_ROWS}<tr><td>${cid}</td><td><mark>${result}</mark></td><td class=dim>${detail}</td></tr>"
+            CONTRACTS_ROWS="${CONTRACTS_ROWS}<tr><td data-label=ID>${cid}</td><td data-label=Result><mark>${result}</mark></td><td data-label=Detail class=dim>${detail}</td></tr>"
         else
-            CONTRACTS_ROWS="${CONTRACTS_ROWS}<tr><td>${cid}</td><td><del>${result}</del></td><td class=dim>${detail}</td></tr>"
+            CONTRACTS_ROWS="${CONTRACTS_ROWS}<tr><td data-label=ID>${cid}</td><td data-label=Result><del>${result}</del></td><td data-label=Detail class=dim>${detail}</td></tr>"
         fi
     done < <(tail -20 "$CONTRACTS_LOG" 2>/dev/null)
 fi
@@ -164,9 +165,9 @@ if [ -d /srv/conos/artifacts ]; then
             link=$(jq -r '.link_path // empty' "$manifest" 2>/dev/null || echo "")
             exposure=$(jq -r '.exposure // "private"' "$manifest" 2>/dev/null || echo "private")
             if [ -n "$link" ]; then
-                ARTIFACT_ROWS="${ARTIFACT_ROWS}<tr><td>${aid}</td><td>${title}</td><td>${exposure}</td><td><a href=\"${link}\">${link}</a></td></tr>"
+                ARTIFACT_ROWS="${ARTIFACT_ROWS}<tr><td data-label=ID>${aid}</td><td data-label=Title>${title}</td><td data-label=Exposure>${exposure}</td><td data-label=Link><a href=\"${link}\">${link}</a></td></tr>"
             else
-                ARTIFACT_ROWS="${ARTIFACT_ROWS}<tr><td>${aid}</td><td>${title}</td><td>${exposure}</td><td class=dim>private</td></tr>"
+                ARTIFACT_ROWS="${ARTIFACT_ROWS}<tr><td data-label=ID>${aid}</td><td data-label=Title>${title}</td><td data-label=Exposure>${exposure}</td><td data-label=Link class=dim>private</td></tr>"
             fi
         done <<< "$RECENT_ARTIFACTS"
     fi
@@ -182,7 +183,7 @@ if [ -n "$RECENT_TASKS" ]; then
         agent=$(echo "$filepath" | sed 's|.*/agents/\([^/]*\)/.*|\1|')
         mtime=$(stat -c '%y' "$filepath" 2>/dev/null | cut -d'.' -f1 || echo "?")
         summary=$(head -1 "$filepath" 2>/dev/null | cut -c1-120 || echo "")
-        RECENT_ROWS="${RECENT_ROWS}<tr><td class=dim>${mtime}</td><td>${agent}</td><td>${summary}</td></tr>"
+        RECENT_ROWS="${RECENT_ROWS}<tr><td data-label=Time class=dim>${mtime}</td><td data-label=Agent>${agent}</td><td data-label=Summary>${summary}</td></tr>"
     done <<< "$RECENT_TASKS"
 fi
 
@@ -241,7 +242,7 @@ b{font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:8px 0}
 .card{padding:6px 10px;background:#1f2937;border-radius:4px}
 .card .l{font-size:11px;color:#6b7280}
-.card .v{font-size:16px;font-weight:600}
+.card .v{font-size:16px;font-weight:600}.card .v span{font-size:11px;font-weight:400}
 mark{background:#065f46;color:#d1fae5;padding:1px 5px;border-radius:2px;font-size:12px}
 del{text-decoration:none;background:#7f1d1d;color:#fecaca;padding:1px 5px;border-radius:2px;font-size:12px}
 b.warn{color:#f59e0b;font-weight:600}
@@ -250,6 +251,24 @@ details summary{cursor:pointer;font-weight:500;font-size:13px;color:#9ca3af}
   background:#1f2937;padding:6px 10px;border-radius:4px;max-height:200px;overflow-y:auto}
 .log div{white-space:pre-wrap;word-break:break-all}
 footer{text-align:center;font-size:11px;color:#4b5563;padding:12px}
+@media(max-width:640px){
+  header{flex-direction:column;gap:2px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  table,thead,tbody,th,tr{display:block}
+  thead tr{display:none}
+  tr{background:#1f2937;border-radius:4px;padding:8px 10px;margin-bottom:6px}
+  td{display:flex;justify-content:space-between;align-items:baseline;
+    padding:2px 0;white-space:normal;max-width:none;border:0}
+  td::before{content:attr(data-label);font-size:11px;color:#6b7280;
+    font-weight:500;min-width:70px;flex-shrink:0}
+  td:first-child{padding-top:0}
+  td:first-child::before{display:none}
+  td:last-child{padding-bottom:0}
+  .log{font-size:11px}
+}
+@media(max-width:640px) and (prefers-color-scheme:light){
+  tr{background:#fff;border:1px solid #e5e7eb}
+}
 @media(prefers-color-scheme:light){
   html{color:#1f2937;background:#f9fafb}
   header{background:#fff;border-color:#e5e7eb}
@@ -269,7 +288,7 @@ footer{text-align:center;font-size:11px;color:#4b5563;padding:12px}
 <main>
 
 <div class="grid">
-  <div class="card"><div class="l">agents</div><div class="v">${ACTIVE_COUNT}/${AGENT_COUNT}</div></div>
+  <div class="card"><div class="l">agents</div><div class="v">${RUNNING_COUNT} <span class=dim>run</span> ${IDLE_COUNT} <span class=dim>idle</span> ${STOPPED_COUNT} <span class=dim>off</span></div></div>
   <div class="card"><div class="l">pending</div><div class="v">${TOTAL_PENDING}</div></div>
   <div class="card"><div class="l">processed</div><div class="v">${TOTAL_PROCESSED}</div></div>
   <div class="card"><div class="l">contracts</div><div class="v">${HEALTH_SUMMARY}</div></div>
